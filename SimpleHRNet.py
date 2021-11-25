@@ -339,6 +339,7 @@ class SimpleHRNet:
             images = images_tensor
 
         images = images.to(self.device)
+        print(images.shape)
 
         if images.shape[0] > 0:
             with torch.no_grad():

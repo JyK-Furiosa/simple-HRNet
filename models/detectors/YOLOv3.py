@@ -98,16 +98,16 @@ class YOLOv3:
         self.device = device
 
         # Set up model
-        self.model = Darknet(model_def, img_size=img_size).to(self.device)
+        self.model = sess= onnxruntime.InferenceSession('yolo_int8.onnx')
 
-        if weights_path.endswith(".weights"):
-            # Load darknet weights
-            self.model.load_darknet_weights(weights_path)
-        else:
-            # Load checkpoint weights
-            self.model.load_state_dict(torch.load(weights_path))
+        # if weights_path.endswith(".weights"):
+        #     # Load darknet weights
+        #     self.model.load_darknet_weights(weights_path)
+        # else:
+        #     # Load checkpoint weights
+        #     self.model.load_state_dict(torch.load(weights_path))
 
-        self.model.eval()  # Set in evaluation mode
+        # self.model.eval()  # Set in evaluation mode
 
         self.classes_file = load_classes(class_path)  # Extracts class labels from file
         self.classes = classes
@@ -122,6 +122,7 @@ class YOLOv3:
 
     def predict(self, images, color_mode='BGR'):
         images_rescaled = prepare_data(images.copy(), color_mode=color_mode)
+
         with torch.no_grad():
             images_rescaled = images_rescaled.to(self.device)
 
@@ -132,10 +133,11 @@ class YOLOv3:
                 for i in range(0, len(images_rescaled), self.max_batch_size):
                     detections[i:i + self.max_batch_size] = self.model(images_rescaled[i:i + self.max_batch_size]).detach()
 
+
             detections = non_max_suppression(detections, self.conf_thres, self.nms_thres)
+
             for i in range(len(images)):
                 if detections[i] is not None:
                     detections[i] = filter_classes(detections[i], self.classes_id)
                     detections[i] = scale_coords(detections[i], images_rescaled[i].shape[1:], images[i].shape[:2])
-
             return detections

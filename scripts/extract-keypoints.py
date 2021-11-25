@@ -7,7 +7,7 @@ import cv2
 import json
 import time
 import torch
-
+import pathlib
 sys.path.insert(1, os.getcwd())
 from SimpleHRNet import SimpleHRNet
 from misc.visualization import check_video_rotation
@@ -28,10 +28,6 @@ def main(format, filename, hrnet_m, hrnet_c, hrnet_j, hrnet_weights, image_resol
 
     image_resolution = ast.literal_eval(image_resolution)
 
-    rotation_code = check_video_rotation(filename)
-    video = cv2.VideoCapture(filename)
-    assert video.isOpened()
-    nof_frames = video.get(cv2.CAP_PROP_FRAME_COUNT)
 
     assert format in ('csv', 'json')
     if format == 'csv':
@@ -65,19 +61,20 @@ def main(format, filename, hrnet_m, hrnet_c, hrnet_j, hrnet_weights, image_resol
         yolo_weights_path=yolo_weights_path,
         device=device
     )
-
-    index = 0
-    while True:
+    index=0
+    ext='jpg'
+    pathes = [str(path) for path in pathlib.Path('../../seg/coco/val2017').glob(f'*.{ext}')]
+    pathes = pathes[:100]
+    nof_frames=len(pathes)
+    for path in pathes:
         t = time.time()
 
-        ret, frame = video.read()
-        if not ret:
-            break
-        if rotation_code is not None:
-            frame = cv2.rotate(frame, rotation_code)
+        frame = cv2.imread(path)
+        # if rotation_code is not None:
+        #     frame = cv2.rotate(frame, rotation_code)
 
         pts = model.predict(frame)
-
+    
         # csv format is:
         #   frame_index,detection_index,<point 0>,<point 1>,...,<point hrnet_j>
         # where each <point N> corresponds to three elements:

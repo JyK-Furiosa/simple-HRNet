@@ -86,7 +86,7 @@ def main(camera_id, filename, hrnet_m, hrnet_c, hrnet_j, hrnet_weights, hrnet_jo
             frame = video.read()
             if frame is None:
                 break
-
+        frame_ = frame.copy()
         pts = model.predict(frame)
 
         if not disable_tracking:
@@ -120,7 +120,8 @@ def main(camera_id, filename, hrnet_m, hrnet_c, hrnet_j, hrnet_weights, hrnet_jo
 
         fps = 1. / (time.time() - t)
         print('\rframerate: %f fps' % fps, end='')
-
+        len_ = frame.shape[1]//2
+        frame__ = np.concatenate((frame_[:,len_:,:],frame[:,len_:,:]),axis=1)
         if has_display:
             cv2.imshow('frame.png', frame)
             k = cv2.waitKey(1)
@@ -131,7 +132,7 @@ def main(camera_id, filename, hrnet_m, hrnet_c, hrnet_j, hrnet_weights, hrnet_jo
                     video.stop()
                 break
         else:
-            cv2.imwrite('frame.png', frame)
+            cv2.imwrite('frame.png', frame__)
 
         if save_video:
             if video_writer is None:
